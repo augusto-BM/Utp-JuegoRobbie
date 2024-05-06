@@ -151,6 +151,10 @@ public class GameManager : MonoBehaviour
 		//game over audio
 		UIManager.DisplayGameOverText();
 		AudioManager.PlayWonAudio();
+
+		// PASAMOS A LA SIGUENTE ESCENA POR EL NOMBRE
+		string nextSceneName = "Level02";
+		SceneManager.LoadScene(nextSceneName);
 	}
 
 	void RestartScene()

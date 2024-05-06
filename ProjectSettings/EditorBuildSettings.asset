@@ -5,7 +5,16 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 1
-    path: Assets/Scenes/ResumedTrainingDay.unity
-    guid: 290d48d81860ad542aee953f65fde8f0
+    path: Assets/Scenes/Escena_video_introduccion.unity
+    guid: d3981135d1dfe4c49be11684b11b8a3f
+  - enabled: 1
+    path: Assets/Scenes/Level01.unity
+    guid: 2c88cb551c006d24faa9e13d9b9a30f5
+  - enabled: 1
+    path: Assets/Scenes/Level02.unity
+    guid: b026b27b7368ca141a6d5d2071da8df0
   m_configObjects: {}
