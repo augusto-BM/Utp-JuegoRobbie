@@ -84,14 +84,14 @@ public class AudioManager : MonoBehaviour
     void StartLevelAudio()
     {
 		//Set the clip for ambient audio, tell it to loop, and then tell it to play
-        current.ambientSource.clip = current.ambientClip;
-        current.ambientSource.loop = true;
-        current.ambientSource.Play();
+        ambientSource.clip = ambientClip;
+        ambientSource.loop = true;
+        ambientSource.Play();
 
 		//Set the clip for music audio, tell it to loop, and then tell it to play
-        current.musicSource.clip = current.musicClip;
-        current.musicSource.loop = true;
-        current.musicSource.Play();
+        musicSource.clip = musicClip;
+        musicSource.loop = true;
+        musicSource.Play();
 
 		//Play the audio that repeats whenever the level reloads
 		PlaySceneRestartAudio();
