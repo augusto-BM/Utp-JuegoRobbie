@@ -21,8 +21,10 @@ public class GameManager : MonoBehaviour
 
 	int numberOfDeaths;							//Number of times player has died
 	float totalGameTime;						//Length of the total game time
-	bool isGameOver;							//Is the game currently over?
+	bool isGameOver;                            //Is the game currently over?
 
+
+	static int playerLives = 5;  // Número inicial de vidas del jugador
 
 	void Awake()
 	{
@@ -130,12 +132,29 @@ public class GameManager : MonoBehaviour
 		current.numberOfDeaths++;
 		UIManager.UpdateDeathUI(current.numberOfDeaths);
 
-		//If we have a scene fader, tell it to fade the scene out
-		if(current.sceneFader != null)
-			current.sceneFader.FadeSceneOut();
+		playerLives--;  // Reducir las vidas del jugador
+		UIManager.UpdateLifeUI(playerLives);  // Actualizar UI de vidas
 
-		//Invoke the RestartScene() method after a delay
-		current.Invoke("RestartScene", current.deathSequenceDuration);
+		//If we have a scene fader, tell it to fade the scene out
+		if (playerLives > 0)
+		{
+			if (current.sceneFader != null)
+				current.sceneFader.FadeSceneOut();
+
+			current.Invoke("RestartScene", current.deathSequenceDuration);
+		}
+		else
+		{
+			// Si el jugador pierde todas las vidas, perder el juego
+			current.GameOver();
+		}
+	}
+
+	void GameOver()
+	{
+		isGameOver = true;
+		UIManager.DisplayPerdioJuegoText();
+		Debug.Log("¡Has perdido el juego!"); // Mostrar mensaje en consola
 	}
 
 	public static void PlayerWon()

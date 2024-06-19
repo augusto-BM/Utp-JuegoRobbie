@@ -16,6 +16,8 @@ public class UIManager : MonoBehaviour
 	public TextMeshProUGUI timeText;		//Text element showing amount of time
 	public TextMeshProUGUI deathText;		//Text element showing number or deaths
 	public TextMeshProUGUI gameOverText;    //Text element showing the Game Over message
+	public TextMeshProUGUI lifeText;    //Text element showing the Game Over message
+	public TextMeshProUGUI perdiojuegoText;    //Text element showing the Game Over message
 
 
 	void Awake()
@@ -67,6 +69,14 @@ public class UIManager : MonoBehaviour
 		current.deathText.text = deathCount.ToString();
 	}
 
+	public static void UpdateLifeUI(int lifeCount)
+	{
+		if (current == null)
+			return;
+
+		current.lifeText.text = lifeCount.ToString();
+	}
+
 	public static void DisplayGameOverText()
 	{
 		//If there is no current UIManager, exit
@@ -77,6 +87,8 @@ public class UIManager : MonoBehaviour
 		//current.gameOverText.enabled = true;
 		current.StartCoroutine(current.ShowGameOverTextCoroutine());
 	}
+
+
 	private IEnumerator ShowGameOverTextCoroutine()
 	{
 		// Activar el texto de Game Over
@@ -89,5 +101,30 @@ public class UIManager : MonoBehaviour
 		gameOverText.enabled = false;
 	}
 
-	
+	public static void DisplayPerdioJuegoText()
+	{
+		//If there is no current UIManager, exit
+		if (current == null)
+			return;
+
+		//Show the game over text
+		//current.gameOverText.enabled = true;
+		current.StartCoroutine(current.ShowPerdioJuegoTextCoroutine());
+	}
+	private IEnumerator ShowPerdioJuegoTextCoroutine()
+	{
+		// Activar el texto de Game Over
+		perdiojuegoText.enabled = true;
+
+		// Esperar 2 segundos
+		yield return new WaitForSeconds(2f);
+
+		// Desactivar el texto de Game Over después de 2 segundos
+		perdiojuegoText.enabled = false;
+		// PASAMOS A LA SIGUENTE ESCENA POR EL NOMBRE REGRESAMOS AL MENU PORQUE PERDIMOS
+		string nextSceneName = "Escena_menu";
+		UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneName);
+	}
+
+
 }
