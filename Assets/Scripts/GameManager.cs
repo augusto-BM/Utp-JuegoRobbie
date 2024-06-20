@@ -1,192 +1,157 @@
-﻿// This script is a Manager that controls the the flow and control of the game. It keeps
-// track of player data (orb count, death count, total game time) and interfaces with
-// the UI Manager. All game commands are issued through the static methods of this class
-
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
-	//This class holds a static reference to itself to ensure that there will only be
-	//one in existence. This is often referred to as a "singleton" design pattern. Other
-	//scripts access this one through its public static methods
-	static GameManager current;
+    static GameManager current;
 
-	public float deathSequenceDuration = 1.5f;	//How long player death takes before restarting
+    public float deathSequenceDuration = 1.5f;
+    List<Orb> orbs;
+    Door lockedDoor;
+    SceneFader sceneFader;
 
-	List<Orb> orbs;								//The collection of scene orbs
-	Door lockedDoor;							//The scene door
-	SceneFader sceneFader;						//The scene fader
+    int numberOfDeaths;
+    float totalGameTime;
+    bool isGameOver;
 
-	int numberOfDeaths;							//Number of times player has died
-	float totalGameTime;						//Length of the total game time
-	bool isGameOver;                            //Is the game currently over?
+    static int playerLives = 5;
 
+    void Awake()
+    {
+        if (current != null && current != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
 
-	static int playerLives = 5;  // Número inicial de vidas del jugador
+        current = this;
+        orbs = new List<Orb>();
+        DontDestroyOnLoad(gameObject);
+    }
 
-	void Awake()
-	{
-		//If a Game Manager exists and this isn't it...
-		if (current != null && current != this)
-		{
-			//...destroy this and exit. There can only be one Game Manager
-			Destroy(gameObject);
-			return;
-		}
+    void Update()
+    {
+        if (isGameOver)
+            return;
 
-		//Set this as the current game manager
-		current = this;
+        totalGameTime += Time.deltaTime;
+        UIManager.UpdateTimeUI(totalGameTime);
+    }
 
-		//Create out collection to hold the orbs
-		orbs = new List<Orb>();
+    public static bool IsGameOver()
+    {
+        if (current == null)
+            return false;
 
-		//Persis this object between scene reloads
-		DontDestroyOnLoad(gameObject);
-	}
+        return current.isGameOver;
+    }
 
-	void Update()
-	{
-		//If the game is over, exit
-		if (isGameOver)
-			return;
+    public static void RegisterSceneFader(SceneFader fader)
+    {
+        if (current == null)
+            return;
 
-		//Update the total game time and tell the UI Manager to update
-		totalGameTime += Time.deltaTime;
-		UIManager.UpdateTimeUI(totalGameTime);
-	}
+        current.sceneFader = fader;
+    }
 
-	public static bool IsGameOver()
-	{
-		//If there is no current Game Manager, return false
-		if (current == null)
-			return false;
+    public static void RegisterDoor(Door door)
+    {
+        if (current == null)
+            return;
 
-		//Return the state of the game
-		return current.isGameOver;
-	}
+        current.lockedDoor = door;
+    }
 
-	public static void RegisterSceneFader(SceneFader fader)
-	{
-		//If there is no current Game Manager, exit
-		if (current == null)
-			return;
+    public static void RegisterOrb(Orb orb)
+    {
+        if (current == null)
+            return;
 
-		//Record the scene fader reference
-		current.sceneFader = fader;
-	}
+        if (!current.orbs.Contains(orb))
+            current.orbs.Add(orb);
 
-	public static void RegisterDoor(Door door)
-	{
-		//If there is no current Game Manager, exit
-		if (current == null)
-			return;
+        UIManager.UpdateOrbUI(current.orbs.Count);
+    }
 
-		//Record the door reference
-		current.lockedDoor = door;
-	}
+    public static void PlayerGrabbedOrb(Orb orb)
+    {
+        if (current == null)
+            return;
 
-	public static void RegisterOrb(Orb orb)
-	{
-		//If there is no current Game Manager, exit
-		if (current == null)
-			return;
+        if (!current.orbs.Contains(orb))
+            return;
 
-		//If the orb collection doesn't already contain this orb, add it
-		if (!current.orbs.Contains(orb))
-			current.orbs.Add(orb);
+        current.orbs.Remove(orb);
 
-		//Tell the UIManager to update the orb text
-		UIManager.UpdateOrbUI(current.orbs.Count);
-	}
+        if (current.orbs.Count == 0)
+            current.lockedDoor.Open();
 
-	public static void PlayerGrabbedOrb(Orb orb)
-	{
-		//If there is no current Game Manager, exit
-		if (current == null)
-			return;
+        UIManager.UpdateOrbUI(current.orbs.Count);
+    }
 
-		//If the orbs collection doesn't have this orb, exit
-		if (!current.orbs.Contains(orb))
-			return;
+    public static void PlayerDied()
+    {
+        if (current == null)
+            return;
 
-		//Remove the collected orb
-		current.orbs.Remove(orb);
+        current.numberOfDeaths++;
+        UIManager.UpdateDeathUI(current.numberOfDeaths);
 
-		//If there are no more orbs, tell the door to open
-		if (current.orbs.Count == 0)
-			current.lockedDoor.Open();
+        playerLives--;
+        UIManager.UpdateLifeUI(playerLives);
 
-		//Tell the UIManager to update the orb text
-		UIManager.UpdateOrbUI(current.orbs.Count);
-	}
+        if (playerLives > 0)
+        {
+            if (current.sceneFader != null)
+                current.sceneFader.FadeSceneOut();
 
-	public static void PlayerDied()
-	{
-		//If there is no current Game Manager, exit
-		if (current == null)
-			return;
+            current.Invoke("RestartScene", current.deathSequenceDuration);
+        }
+        else
+        {
+            current.GameOver();
+        }
+    }
 
-		//Increment the number of player deaths and tell the UIManager
-		current.numberOfDeaths++;
-		UIManager.UpdateDeathUI(current.numberOfDeaths);
+    void GameOver()
+    {
+        isGameOver = true;
+        UIManager.DisplayPerdioJuegoText();
+        Debug.Log("¡Has perdido el juego!");
+    }
 
-		playerLives--;  // Reducir las vidas del jugador
-		UIManager.UpdateLifeUI(playerLives);  // Actualizar UI de vidas
+    public static void PlayerWon()
+    {
+        if (current == null)
+            return;
 
-		//If we have a scene fader, tell it to fade the scene out
-		if (playerLives > 0)
-		{
-			if (current.sceneFader != null)
-				current.sceneFader.FadeSceneOut();
+        current.isGameOver = true;
+        UIManager.DisplayGameOverText();
+        AudioManager.PlayWonAudio();
 
-			current.Invoke("RestartScene", current.deathSequenceDuration);
-		}
-		else
-		{
-			// Si el jugador pierde todas las vidas, perder el juego
-			current.GameOver();
-		}
-	}
+        string nextSceneName = "Level02";
+        SceneManager.LoadScene(nextSceneName);
+    }
 
-	void GameOver()
-	{
-		isGameOver = true;
-		UIManager.DisplayPerdioJuegoText();
-		Debug.Log("¡Has perdido el juego!"); // Mostrar mensaje en consola
-	}
+    void RestartScene()
+    {
+        orbs.Clear();
+        AudioManager.PlaySceneRestartAudio();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
 
-	public static void PlayerWon()
-	{
-		//If there is no current Game Manager, exit
-		if (current == null)
-			return;
+    public static void AumentarVidas()
+    {
+        // Si no hay un GameManager actual, salir
+        if (current == null)
+            return;
 
-		//The game is now over
-		current.isGameOver = true;
+        // Aumentar el número de vidas del jugador
+        playerLives++;
+        UIManager.UpdateLifeUI(playerLives);  // Actualizar la UI de vidas
 
+        Debug.Log("Vidas aumentadas: " + playerLives);  // Mensaje de depuración
+    }
 
-		//Tell UI Manager to show the game over text and tell the Audio Manager to play
-		//game over audio
-		UIManager.DisplayGameOverText();
-		AudioManager.PlayWonAudio();
-
-
-		// PASAMOS A LA SIGUENTE ESCENA POR EL NOMBRE
-		string nextSceneName = "Level02";
-		SceneManager.LoadScene(nextSceneName);
-	}
-
-	void RestartScene()
-	{
-		//Clear the current list of orbs
-		orbs.Clear();
-
-		//Play the scene restart audio
-		AudioManager.PlaySceneRestartAudio();
-
-		//Reload the current scene
-		SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); 
-	}
 }

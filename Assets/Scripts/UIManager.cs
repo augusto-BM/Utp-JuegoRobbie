@@ -1,130 +1,91 @@
-﻿// This script is a Manager that controls the UI HUD (deaths, time, and orbs) for the 
-// project. All HUD UI commands are issued through the static methods of this class
-
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
 using System.Collections;
 
 public class UIManager : MonoBehaviour
 {
-	//This class holds a static reference to itself to ensure that there will only be
-	//one in existence. This is often referred to as a "singleton" design pattern. Other
-	//scripts access this one through its public static methods
-	static UIManager current;
+    static UIManager current;
 
-	public TextMeshProUGUI orbText;			//Text element showing number of orbs
-	public TextMeshProUGUI timeText;		//Text element showing amount of time
-	public TextMeshProUGUI deathText;		//Text element showing number or deaths
-	public TextMeshProUGUI gameOverText;    //Text element showing the Game Over message
-	public TextMeshProUGUI lifeText;    //Text element showing the Game Over message
-	public TextMeshProUGUI perdiojuegoText;    //Text element showing the Game Over message
+    public TextMeshProUGUI orbText;
+    public TextMeshProUGUI timeText;
+    public TextMeshProUGUI deathText;
+    public TextMeshProUGUI gameOverText;
+    public TextMeshProUGUI lifeText;
+    public TextMeshProUGUI perdiojuegoText;
 
+    void Awake()
+    {
+        if (current != null && current != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
 
-	void Awake()
-	{
-		//If an UIManager exists and it is not this...
-		if (current != null && current != this)
-		{
-			//...destroy this and exit. There can be only one UIManager
-			Destroy(gameObject);
-			return;
-		}
+        current = this;
+        DontDestroyOnLoad(gameObject);
+    }
 
-		//This is the current UIManager and it should persist between scene loads
-		current = this;
-		DontDestroyOnLoad(gameObject);
-	}
+    public static void UpdateOrbUI(int orbCount)
+    {
+        if (current == null)
+            return;
 
-	public static void UpdateOrbUI(int orbCount)
-	{
-		//If there is no current UIManager, exit
-		if (current == null)
-			return;
+        current.orbText.text = orbCount.ToString();
+    }
 
-		//Update the text orb element
-		current.orbText.text = orbCount.ToString();
-	}
+    public static void UpdateTimeUI(float time)
+    {
+        if (current == null)
+            return;
 
-	public static void UpdateTimeUI(float time)
-	{
-		//If there is no current UIManager, exit
-		if (current == null)
-			return;
+        int minutes = (int)(time / 60);
+        float seconds = time % 60f;
+        current.timeText.text = minutes.ToString("00") + ":" + seconds.ToString("00");
+    }
 
-		//Take the time and convert it into the number of minutes and seconds
-		int minutes = (int)(time / 60);
-		float seconds = time % 60f;
+    public static void UpdateDeathUI(int deathCount)
+    {
+        if (current == null)
+            return;
 
-		//Create the string in the appropriate format for the time
-		current.timeText.text = minutes.ToString("00") + ":" + seconds.ToString("00");
-	}
+        current.deathText.text = deathCount.ToString();
+    }
 
-	public static void UpdateDeathUI(int deathCount)
-	{
-		//If there is no current UIManager, exit
-		if (current == null)
-			return;
+    public static void UpdateLifeUI(int lifeCount)
+    {
+        if (current == null)
+            return;
 
-		//update the player death count element
-		current.deathText.text = deathCount.ToString();
-	}
+        current.lifeText.text = lifeCount.ToString();
+    }
 
-	public static void UpdateLifeUI(int lifeCount)
-	{
-		if (current == null)
-			return;
+    public static void DisplayGameOverText()
+    {
+        if (current == null)
+            return;
 
-		current.lifeText.text = lifeCount.ToString();
-	}
+        current.StartCoroutine(current.ShowGameOverTextCoroutine());
+    }
 
-	public static void DisplayGameOverText()
-	{
-		//If there is no current UIManager, exit
-		if (current == null)
-			return;
+    private IEnumerator ShowGameOverTextCoroutine()
+    {
+        gameOverText.enabled = true;
+        yield return new WaitForSeconds(2f);
+        gameOverText.enabled = false;
+    }
 
-		//Show the game over text
-		//current.gameOverText.enabled = true;
-		current.StartCoroutine(current.ShowGameOverTextCoroutine());
-	}
+    public static void DisplayPerdioJuegoText()
+    {
+        if (current == null)
+            return;
 
+        current.StartCoroutine(current.ShowPerdioJuegoTextCoroutine());
+    }
 
-	private IEnumerator ShowGameOverTextCoroutine()
-	{
-		// Activar el texto de Game Over
-		gameOverText.enabled = true;
-
-		// Esperar 5 segundos
-		yield return new WaitForSeconds(2f);
-
-		// Desactivar el texto de Game Over después de 2 segundos
-		gameOverText.enabled = false;
-	}
-
-	public static void DisplayPerdioJuegoText()
-	{
-		//If there is no current UIManager, exit
-		if (current == null)
-			return;
-
-		//Show the game over text
-		//current.gameOverText.enabled = true;
-		current.StartCoroutine(current.ShowPerdioJuegoTextCoroutine());
-	}
-	private IEnumerator ShowPerdioJuegoTextCoroutine()
-	{
-		// Activar el texto de Game Over
-		perdiojuegoText.enabled = true;
-
-		// Esperar 2 segundos
-		yield return new WaitForSeconds(2f);
-
-		// Desactivar el texto de Game Over después de 2 segundos
-		perdiojuegoText.enabled = false;
-		// PASAMOS A LA SIGUENTE ESCENA POR EL NOMBRE REGRESAMOS AL MENU PORQUE PERDIMOS
-		string nextSceneName = "Escena_menu";
-		UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneName);
-	}
-
-
+    private IEnumerator ShowPerdioJuegoTextCoroutine()
+    {
+        perdiojuegoText.enabled = true;
+        yield return new WaitForSeconds(2f);
+        perdiojuegoText.enabled = false;
+    }
 }
