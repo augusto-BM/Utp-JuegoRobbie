@@ -63,5 +63,13 @@ public class scr_correr : MonoBehaviour
         {
             CambiarDireccion(); // Cambiar la dirección del personaje
         }
+        else if (other.gameObject.layer == LayerMask.NameToLayer("Player"))
+        {
+            // Ejecutar la animación de festejar
+            if (anim != null)
+            {
+                anim.SetTrigger("Festejar");
+            }
+        }
     }
 }
